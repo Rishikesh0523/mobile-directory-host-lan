@@ -156,6 +156,8 @@
       const qrCodeImage = document.getElementById('qrCodeImage');
       const serverLink = document.getElementById('serverLink');
 
+      let authToken = '';
+
       loginForm.style.display = 'block';
 
       loginForm.addEventListener('submit', async (e) => {
@@ -169,6 +171,8 @@
           body: JSON.stringify({ password }),
         });
         if (response.ok) {
+          const data = await response.json();
+          authToken = data.token;
           loginForm.style.display = 'none';
           content.style.display = 'block';
           loadFiles();
@@ -179,7 +183,11 @@
       });
 
       const loadFiles = async () => {
-        const response = await fetch('/files');
+        const response = await fetch('/files', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
         const files = await response.json();
         fileList.innerHTML = files.map(file => 
           `<li>${file} <a href="/download/${file}" download>Download</a></li>`
@@ -191,6 +199,9 @@
         const formData = new FormData(uploadForm);
         await fetch('/upload', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          },
           body: formData,
         });
         uploadForm.reset();
@@ -202,6 +213,9 @@
         const filename = deleteForm.filename.value;
         await fetch(`/delete/${filename}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
         });
         deleteForm.reset();
         loadFiles();

@@ -3,10 +3,12 @@ const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 
 const app = express();
 const port = 3000;
 const password = process.env.FILE_MANAGER_PASSWORD || 'admin';
+const tokenSecret = crypto.randomBytes(64).toString('hex');
 
 // Define the path to the Downloads folder (UserLAnd environment)
 const downloadsDir = path.join(process.env.HOME, 'storage', 'downloads');
@@ -24,10 +26,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Authentication middleware
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (authHeader === `Bearer ${password}`) {
-    next();
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token === tokenSecret) {
+      next();
+    } else {
+      res.status(401).json({ error: 'Invalid token' });
+    }
   } else {
-    res.status(401).json({ error: 'Unauthorized' });
+    res.status(401).json({ error: 'Authorization header missing' });
   }
 };
 
@@ -39,7 +46,7 @@ app.get('/', (req, res) => {
 app.post('/login', (req, res) => {
   const { password: inputPassword } = req.body;
   if (inputPassword === password) {
-    res.json({ success: true });
+    res.json({ success: true, token: tokenSecret });
   } else {
     res.status(401).json({ error: 'Invalid password' });
   }
