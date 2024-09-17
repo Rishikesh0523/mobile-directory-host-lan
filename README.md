@@ -3,6 +3,7 @@
 ## Overview
 
 This project Mobile Directory Local Host is built with Express.js, designed to run in UserLAnd on an Android device. It allows users to upload, download, and delete files from a specified directory on the device. The application also provides a web interface accessible via a QR code for easy access on the same Wi-Fi network.
+A Comprehensive Setup guide is provided in the blog https://medium.com/@rishikesh0523/comprehensive-installation-and-setup-guide-for-lan-based-file-sharing-app-c1796ab102df.
 
 ## Features
 
