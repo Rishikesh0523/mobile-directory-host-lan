@@ -133,108 +133,128 @@
 
       <h2>Delete File</h2>
       <form id="deleteForm">
-        <input type="text" name="filename" placeholder="Filename to delete" required />
+        <input type="text" id="deleteFilename" placeholder="File name to delete" required />
         <button type="submit">Delete</button>
       </form>
 
-      <div class="qr-code">
-        <h2>Access URL</h2>
+      <div class="qr-code" id="qrCodeContainer">
+        <p>Access URL:</p>
         <img id="qrCodeImage" src="" alt="QR Code" />
-        <a id="serverLink" href="" target="_blank"></a>
       </div>
+
+      <a id="serverLink" href="" target="_blank">Server URL</a>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginForm = document.getElementById('loginForm');
-      const content = document.getElementById('content');
-      const uploadForm = document.getElementById('uploadForm');
-      const deleteForm = document.getElementById('deleteForm');
-      const fileList = document.getElementById('fileList');
-      const qrCodeImage = document.getElementById('qrCodeImage');
-      const serverLink = document.getElementById('serverLink');
+    const loginForm = document.getElementById('loginForm');
+    const content = document.getElementById('content');
+    const fileList = document.getElementById('fileList');
+    const uploadForm = document.getElementById('uploadForm');
+    const deleteForm = document.getElementById('deleteForm');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const qrCodeImage = document.getElementById('qrCodeImage');
+    const serverLink = document.getElementById('serverLink');
+    const passwordInput = document.getElementById('password');
+    const deleteFilenameInput = document.getElementById('deleteFilename');
 
-      let authToken = '';
+    let token = '';
 
-      loginForm.style.display = 'block';
-
-      loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const password = document.getElementById('password').value;
+    // Handle login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = passwordInput.value;
+      try {
         const response = await fetch('/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),
         });
+        const result = await response.json();
         if (response.ok) {
-          const data = await response.json();
-          authToken = data.token;
+          token = result.token;
           loginForm.style.display = 'none';
           content.style.display = 'block';
-          loadFiles();
-          generateQRCode();
+          fetchFiles();
+          fetchServerInfo();
         } else {
-          alert('Invalid password');
+          alert(result.error);
         }
-      });
+      } catch (error) {
+        console.error('Error logging in:', error);
+      }
+    });
 
-      const loadFiles = async () => {
+    // Fetch files from server
+    async function fetchFiles() {
+      try {
         const response = await fetch('/files', {
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const files = await response.json();
-        fileList.innerHTML = files.map(file => 
-          `<li>${file} <a href="/download/${file}" download>Download</a></li>`
-        ).join('');
-      };
+        fileList.innerHTML = files.map(file => `
+          <li>
+            <a href="/download/${file}" download="${file}">${file}</a>
+          </li>
+        `).join('');
+      } catch (error) {
+        console.error('Error fetching files:', error);
+      }
+    }
 
-      uploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(uploadForm);
-        await fetch('/upload', {
+    // Handle file upload
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(uploadForm);
+      try {
+        const response = await fetch('/upload', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
           body: formData,
         });
-        uploadForm.reset();
-        loadFiles();
-      });
-
-      deleteForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const filename = deleteForm.filename.value;
-        await fetch(`/delete/${filename}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
-        });
-        deleteForm.reset();
-        loadFiles();
-      });
-
-      const generateQRCode = async () => {
-        const response = await fetch('/server-info');
-        const { url } = await response.json();
-        QRCode.toDataURL(url, (err, dataUrl) => {
-          if (err) {
-            console.error('QR Code generation error:', err);
-            return;
-          }
-          qrCodeImage.src = dataUrl;
-          serverLink.href = url;
-          serverLink.textContent = url;
-        });
-      };
+        const result = await response.text();
+        alert(result);
+        fetchFiles();
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
     });
+
+    // Handle file delete
+    deleteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const filename = deleteFilenameInput.value;
+      try {
+        const response = await fetch(`/delete/${filename}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.text();
+        alert(result);
+        fetchFiles();
+      } catch (error) {
+        console.error('Error deleting file:', error);
+      }
+    });
+
+    // Fetch server info
+    async function fetchServerInfo() {
+      try {
+        const response = await fetch('/server-info');
+        const result = await response.json();
+        serverLink.href = result.url;
+        serverLink.textContent = result.url;
+        generateQRCode(result.url);
+      } catch (error) {
+        console.error('Error fetching server info:', error);
+      }
+    }
+
+    // Generate QR code
+    function generateQRCode(url) {
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+      qrCodeImage.src = qrCodeUrl;
+    }
   </script>
 </body>
 </html>

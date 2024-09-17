@@ -82,7 +82,7 @@ app.get('/files', authenticate, (req, res) => {
 
 app.get('/download/:filename', authenticate, (req, res) => {
   const file = path.join(downloadsDir, req.params.filename);
-  res.download(file, (err) => {
+  res.download(file, err => {
     if (err) {
       console.error('File not found:', err);
       res.status(404).send('File not found');
