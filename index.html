@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 80%;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    h2 {
+      color: #0056b3;
+      border-bottom: 2px solid #e7e7e7;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input[type="file"], input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: calc(100% - 22px);
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #007bff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .file-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .file-list li {
+      padding: 10px;
+      background: #f9f9f9;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-list a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .file-list a:hover {
+      text-decoration: underline;
+    }
+    .qr-code {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>File Manager</h1>
+    
+    <h2>Upload File</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="file" required />
+      <button type="submit">Upload</button>
+    </form>
+
+    <h2>Files</h2>
+    <div class="file-list" id="fileList"></div>
+
+    <h2>Delete File</h2>
+    <form id="deleteForm">
+      <input type="text" name="filename" placeholder="Filename to delete" required />
+      <button type="submit">Delete</button>
+    </form>
+
+    <div class="qr-code">
+      <h2>Access URL</h2>
+      <img id="qrCodeImage" src="" alt="QR Code" />
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadForm = document.getElementById('uploadForm');
+      const deleteForm = document.getElementById('deleteForm');
+      const fileList = document.getElementById('fileList');
+      const qrCodeImage = document.getElementById('qrCodeImage');
+
+      // Fetch and display the list of files
+      const loadFiles = async () => {
+        const response = await fetch('/files');
+        const files = await response.json();
+        fileList.innerHTML = files.map(file => 
+          `<li>${file} <a href="/download/${file}" download>Download</a></li>`
+        ).join('');
+      };
+      loadFiles();
+
+      // Handle file upload
+      uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(uploadForm);
+        await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        uploadForm.reset();
+        loadFiles();
+      });
+
+      // Handle file deletion
+      deleteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const filename = deleteForm.filename.value;
+        await fetch(`/delete/${filename}`, {
+          method: 'DELETE',
+        });
+        deleteForm.reset();
+        loadFiles();
+      });
+
+      // Generate QR Code for the server URL
+      const generateQRCode = async () => {
+        const baseUrl = `${window.location.protocol}//${window.location.host}`;
+        QRCode.toDataURL(baseUrl, (err, url) => {
+          if (err) {
+            console.error('QR Code generation error:', err);
+            return;
+          }
+          qrCodeImage.src = url;
+        });
+      };
+      generateQRCode();
+    });
+  </script>
+</body>
+</html>
