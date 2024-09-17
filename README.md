@@ -66,7 +66,7 @@ This project Mobile Directory Local Host is built with Express.js, designed to r
 4. **Clone the Project Repository:**
    ```bash
    git clone https://github.com/Rishikesh0523/mobile-directory-host-lan.git
-   cd repository
+   cd mobile-directory-host-lan
    ```
 
 5. **Install Project Dependencies:**
