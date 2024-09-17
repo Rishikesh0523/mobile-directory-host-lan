@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a file management application built with Express.js, designed to run in UserLAnd on an Android device. It allows users to upload, download, and delete files from a specified directory on the device. The application also provides a web interface accessible via a QR code for easy access on the same Wi-Fi network.
+This project Mobile Directory Local Host is built with Express.js, designed to run in UserLAnd on an Android device. It allows users to upload, download, and delete files from a specified directory on the device. The application also provides a web interface accessible via a QR code for easy access on the same Wi-Fi network.
 
 ## Features
 
@@ -11,6 +11,27 @@ This project is a file management application built with Express.js, designed to
 - **Delete Files:** Remove files from the directory.
 - **Web Interface:** User-friendly web interface for file management.
 - **QR Code:** QR code for easy access to the web interface.
+
+## Screenshots
+
+- **Upload Files:**
+![Upload Files](images/upload_files.png)
+
+- **Download Files:** 
+
+![Download Files](images/download_files.png)
+
+- **Delete Files:** 
+
+![Delete Files](images/delete_files.png)
+
+- **Web Interface:** 
+
+![Web Interface](images/web_interface.png)
+
+- **QR Code:** 
+
+![qr_code](images/qr_code.png)
 
 ## Prerequisites
 
