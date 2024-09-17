@@ -97,8 +97,10 @@
       margin-top: 2rem;
     }
     #qrCodeImage {
-      max-width: 200px;
+      max-width: 100%;
       height: auto;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
     }
     #loginForm, #content {
       display: none;
@@ -160,6 +162,8 @@
       loginForm.style.display = 'block';
       content.style.display = 'none';
 
+      let token = '';
+
       // Handle login
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -172,7 +176,7 @@
           });
           const result = await response.json();
           if (response.ok) {
-            const token = result.token;
+            token = result.token;
             loginForm.style.display = 'none'; // Hide login form
             content.style.display = 'block'; // Show content
             fetchFiles();
@@ -191,11 +195,13 @@
             headers: { 'Authorization': `Bearer ${token}` },
           });
           const files = await response.json();
-          fileList.innerHTML = files.map(file => `
-            <li>
-              <a href="/download/${file}" target="_blank">${file}</a>
-            </li>
-          `).join('');
+          fileList.innerHTML = files.length > 0
+            ? files.map(file => `
+              <li>
+                <a href="/download/${file}" target="_blank">${file}</a>
+              </li>
+            `).join('')
+            : '<li>No files available.</li>';
         } catch (error) {
           console.error('Error fetching files:', error);
         }
@@ -210,7 +216,7 @@
           const url = result.url;
           serverLink.href = url;
           serverLink.textContent = url;
-          QRCode.toDataURL(url, (err, url) => {
+          QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, url) => {
             if (err) {
               console.error('Error generating QR code:', err);
               return;
