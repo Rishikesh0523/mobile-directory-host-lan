@@ -10,7 +10,7 @@ const port = 3000;
 const password = process.env.FILE_MANAGER_PASSWORD || 'admin';
 const tokenSecret = crypto.randomBytes(64).toString('hex');
 
-// Define the path to the Downloads folder (UserLAnd environment)
+// Define the path to the Downloads folder
 const downloadsDir = path.join(process.env.HOME, 'storage', 'downloads');
 
 // Ensure the Downloads folder exists
