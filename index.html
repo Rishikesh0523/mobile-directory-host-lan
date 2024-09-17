@@ -46,7 +46,7 @@
     form {
       margin-bottom: 2rem;
     }
-    input[type="file"], input[type="text"] {
+    input[type="file"], input[type="text"], input[type="password"] {
       padding: 0.75rem;
       border: 1px solid var(--border-color);
       border-radius: 4px;
@@ -100,42 +100,84 @@
       max-width: 200px;
       height: auto;
     }
+    #loginForm, #content {
+      display: none;
+    }
+    #serverLink {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Mobile Directory Local Host</h1>
     
-    <h2>Upload File</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <input type="file" name="file" required />
-      <button type="submit">Upload</button>
+    <form id="loginForm">
+      <input type="password" id="password" placeholder="Enter password" required />
+      <button type="submit">Login</button>
     </form>
 
-    <h2>Files</h2>
-    <div class="file-list" id="fileList"></div>
+    <div id="content">
+      <h2>Upload File</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" required />
+        <button type="submit">Upload</button>
+      </form>
 
-    <h2>Delete File</h2>
-    <form id="deleteForm">
-      <input type="text" name="filename" placeholder="Filename to delete" required />
-      <button type="submit">Delete</button>
-    </form>
+      <h2>Files</h2>
+      <div class="file-list" id="fileList"></div>
 
-    <div class="qr-code">
-      <h2>Access URL</h2>
-      <img id="qrCodeImage" src="" alt="QR Code" />
+      <h2>Delete File</h2>
+      <form id="deleteForm">
+        <input type="text" name="filename" placeholder="Filename to delete" required />
+        <button type="submit">Delete</button>
+      </form>
+
+      <div class="qr-code">
+        <h2>Access URL</h2>
+        <img id="qrCodeImage" src="" alt="QR Code" />
+        <a id="serverLink" href="" target="_blank"></a>
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('loginForm');
+      const content = document.getElementById('content');
       const uploadForm = document.getElementById('uploadForm');
       const deleteForm = document.getElementById('deleteForm');
       const fileList = document.getElementById('fileList');
       const qrCodeImage = document.getElementById('qrCodeImage');
+      const serverLink = document.getElementById('serverLink');
 
-      // Fetch and display the list of files
+      loginForm.style.display = 'block';
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const password = document.getElementById('password').value;
+        const response = await fetch('/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ password }),
+        });
+        if (response.ok) {
+          loginForm.style.display = 'none';
+          content.style.display = 'block';
+          loadFiles();
+          generateQRCode();
+        } else {
+          alert('Invalid password');
+        }
+      });
+
       const loadFiles = async () => {
         const response = await fetch('/files');
         const files = await response.json();
@@ -143,9 +185,7 @@
           `<li>${file} <a href="/download/${file}" download>Download</a></li>`
         ).join('');
       };
-      loadFiles();
 
-      // Handle file upload
       uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(uploadForm);
@@ -157,7 +197,6 @@
         loadFiles();
       });
 
-      // Handle file deletion
       deleteForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const filename = deleteForm.filename.value;
@@ -168,18 +207,19 @@
         loadFiles();
       });
 
-      // Generate QR Code for the server URL
       const generateQRCode = async () => {
-        const baseUrl = `${window.location.protocol}//${window.location.host}`;
-        QRCode.toDataURL(baseUrl, (err, url) => {
+        const response = await fetch('/server-info');
+        const { url } = await response.json();
+        QRCode.toDataURL(url, (err, dataUrl) => {
           if (err) {
             console.error('QR Code generation error:', err);
             return;
           }
-          qrCodeImage.src = url;
+          qrCodeImage.src = dataUrl;
+          serverLink.href = url;
+          serverLink.textContent = url;
         });
       };
-      generateQRCode();
     });
   </script>
 </body>

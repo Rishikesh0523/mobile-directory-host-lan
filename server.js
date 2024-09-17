@@ -2,9 +2,11 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const app = express();
 const port = 3000;
+const password = process.env.FILE_MANAGER_PASSWORD || 'admin';
 
 // Define the path to the Downloads folder (UserLAnd environment)
 const downloadsDir = path.join(process.env.HOME, 'storage', 'downloads');
@@ -14,17 +16,54 @@ if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
-// Enable file uploads
+// Middleware
+app.use(express.json());
 app.use(fileUpload());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from public
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve index.html from the root directory
+// Authentication middleware
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader === `Bearer ${password}`) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+// Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Route to display files in the Downloads folder
-app.get('/files', (req, res) => {
+app.post('/login', (req, res) => {
+  const { password: inputPassword } = req.body;
+  if (inputPassword === password) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
+app.get('/server-info', (req, res) => {
+  const networkInterfaces = os.networkInterfaces();
+  let ipAddress = 'localhost';
+  
+  // Find the first non-internal IPv4 address
+  Object.keys(networkInterfaces).some(ifname => {
+    return networkInterfaces[ifname].some(iface => {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        ipAddress = iface.address;
+        return true;
+      }
+      return false;
+    });
+  });
+
+  res.json({ url: `http://${ipAddress}:${port}` });
+});
+
+app.get('/files', authenticate, (req, res) => {
   fs.readdir(downloadsDir, (err, files) => {
     if (err) {
       console.error('Error reading directory:', err);
@@ -34,10 +73,8 @@ app.get('/files', (req, res) => {
   });
 });
 
-// Route to download a specific file
-app.get('/download/:filename', (req, res) => {
+app.get('/download/:filename', authenticate, (req, res) => {
   const file = path.join(downloadsDir, req.params.filename);
-  console.log('Download path:', file);  // Log the path for debugging
   res.download(file, (err) => {
     if (err) {
       console.error('File not found:', err);
@@ -46,16 +83,13 @@ app.get('/download/:filename', (req, res) => {
   });
 });
 
-// Route to upload a file to the Downloads folder
-app.post('/upload', (req, res) => {
+app.post('/upload', authenticate, (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
 
   const file = req.files.file;
   const uploadPath = path.join(downloadsDir, file.name);
-
-  console.log('Upload path:', uploadPath);  // Log the path for debugging
 
   file.mv(uploadPath, (err) => {
     if (err) {
@@ -66,8 +100,7 @@ app.post('/upload', (req, res) => {
   });
 });
 
-// Route to delete a specific file
-app.delete('/delete/:filename', (req, res) => {
+app.delete('/delete/:filename', authenticate, (req, res) => {
   const file = path.join(downloadsDir, req.params.filename);
   fs.unlink(file, (err) => {
     if (err) {
@@ -76,6 +109,12 @@ app.delete('/delete/:filename', (req, res) => {
     }
     res.send('File deleted successfully!');
   });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // Start the server
