@@ -114,7 +114,8 @@
       margin-top: 2rem;
     }
 
-    .qr-code img {
+    #qrCodeImage,
+    #qrCodeImageRemote {
       max-width: 100%;
       height: auto;
       border: 2px solid var(--border-color);
@@ -126,7 +127,14 @@
       display: none;
     }
 
-    #serverLink,
+    #serverLink {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
+    
     #serverLinkRemote {
       display: block;
       text-align: center;
@@ -167,12 +175,13 @@
         <img id="qrCodeImage" src="" alt="QR Code" />
       </div>
       <a id="serverLink" href="" target="_blank">Server URL</a>
-
+      
       <div class="qr-code">
         <p>Remote Access URL:</p>
         <img id="qrCodeImageRemote" src="" alt="QR Code" />
       </div>
-      <a id="serverLinkRemote" href="https://mobilehost.loca.lt" target="_blank">mobilehost.loca.lt</a>
+      <a id="serverLinkRemote" href="" target="_blank">mobilehost.loca.lt</a>
+
     </div>
   </div>
 
@@ -186,6 +195,7 @@
       const qrCodeImage = document.getElementById('qrCodeImage');
       const qrCodeImageRemote = document.getElementById('qrCodeImageRemote');
       const serverLink = document.getElementById('serverLink');
+      const serverLinkRemote = document.getElementById('serverLinkRemote');
 
       // Initially, show the login form
       loginForm.style.display = 'block';
@@ -194,12 +204,12 @@
       const url = 'https://mobilehost.loca.lt';  // URL to encode in the QR code
 
       // Generate QR Code for remote access
-      QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, qrCodeUrl) => {
+      QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, url) => {
         if (err) {
           console.error('Error generating QR code:', err);
           return;
         }
-        qrCodeImageRemote.src = qrCodeUrl;
+        qrCodeImageRemote.src = url;
       });
 
       let token = '';
@@ -262,66 +272,55 @@
           const url = result.url;
           serverLink.href = url;
           serverLink.textContent = url;
-          QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, qrCodeUrl) => {
+          QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, url) => {
             if (err) {
               console.error('Error generating QR code:', err);
               return;
             }
-            qrCodeImage.src = qrCodeUrl;
+            qrCodeImage.src = url;
           });
         } catch (error) {
           console.error('Error fetching server info:', error);
         }
       };
 
-      const downloadFile = async (filename) => {
-        try {
-          const response = await fetch(`/download/${filename}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          } else {
-            alert('File not found.');
-          }
-        } catch (error) {
-          console.error('Error downloading file:', error);
-        }
+      const downloadFile = (filename) => {
+        window.open(`/download/${filename}`, '_blank');
       };
 
-      const uploadForm = document.getElementById('uploadForm');
-      uploadForm.addEventListener('submit', async (e) => {
+      document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(uploadForm);
+        const formData = new FormData(e.target);
         try {
-          await fetch('/upload', {
+          const response = await fetch('/upload', {
             method: 'POST',
             body: formData,
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          fetchFiles();
+          if (response.ok) {
+            fetchFiles(); // Refresh the file list
+          } else {
+            alert('Failed to upload file.');
+          }
         } catch (error) {
           console.error('Error uploading file:', error);
         }
       });
 
-      const deleteForm = document.getElementById('deleteForm');
-      deleteForm.addEventListener('submit', async (e) => {
+      document.getElementById('deleteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const filename = document.getElementById('deleteFilename').value;
         try {
-          await fetch(`/delete/${filename}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+          const response = await fetch('/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ filename }),
           });
-          fetchFiles();
+          if (response.ok) {
+            fetchFiles(); // Refresh the file list
+          } else {
+            alert('Failed to delete file.');
+          }
         } catch (error) {
           console.error('Error deleting file:', error);
         }
