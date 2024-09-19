@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
       --text-color: #333333;
       --border-color: #e0e0e0;
     }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--background-color);
@@ -21,6 +23,7 @@
       padding: 0;
       line-height: 1.6;
     }
+
     .container {
       width: 90%;
       max-width: 1000px;
@@ -28,14 +31,16 @@
       padding: 2rem;
       background: var(--card-background);
       border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     h1 {
       text-align: center;
       color: var(--primary-color);
       font-size: 2.5rem;
       margin-bottom: 2rem;
     }
+
     h2 {
       color: var(--secondary-color);
       border-bottom: 2px solid var(--border-color);
@@ -43,10 +48,14 @@
       margin-top: 2rem;
       margin-bottom: 1rem;
     }
+
     form {
       margin-bottom: 2rem;
     }
-    input[type="file"], input[type="text"], input[type="password"] {
+
+    input[type="file"],
+    input[type="text"],
+    input[type="password"] {
       padding: 0.75rem;
       border: 1px solid var(--border-color);
       border-radius: 4px;
@@ -54,6 +63,7 @@
       font-size: 1rem;
       margin-bottom: 1rem;
     }
+
     button {
       padding: 0.75rem 1.5rem;
       border: none;
@@ -64,13 +74,16 @@
       font-size: 1rem;
       transition: background-color 0.3s ease;
     }
+
     button:hover {
       background: var(--secondary-color);
     }
+
     .file-list ul {
       list-style-type: none;
       padding: 0;
     }
+
     .file-list li {
       padding: 1rem;
       background: var(--background-color);
@@ -81,30 +94,38 @@
       align-items: center;
       transition: transform 0.2s ease;
     }
+
     .file-list li:hover {
       transform: translateX(5px);
     }
+
     .file-list a {
       color: var(--primary-color);
       text-decoration: none;
       font-weight: bold;
     }
+
     .file-list a:hover {
       text-decoration: underline;
     }
+
     .qr-code {
       text-align: center;
       margin-top: 2rem;
     }
+
     #qrCodeImage {
       max-width: 100%;
       height: auto;
       border: 2px solid var(--border-color);
       border-radius: 8px;
     }
-    #loginForm, #content {
+
+    #loginForm,
+    #content {
       display: none;
     }
+
     #serverLink {
       display: block;
       text-align: center;
@@ -114,10 +135,11 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>Mobile Directory Local Host</h1>
-    
+
     <form id="loginForm">
       <input type="password" id="password" placeholder="Enter password" required />
       <button type="submit">Login</button>
@@ -140,8 +162,13 @@
       </form>
 
       <div class="qr-code" id="qrCodeContainer">
-        <p>Access URL:</p>
+        <p>Local Access URL:</p>
         <img id="qrCodeImage" src="" alt="QR Code" />
+      </div>
+
+      <div class="qr-code">
+        <p>Remote Access URL:</p>
+        <img id="qrCodeImageRemote" src="" alt="QR Code" />
       </div>
 
       <a id="serverLink" href="" target="_blank">Server URL</a>
@@ -161,6 +188,21 @@
       // Initially, show the login form
       loginForm.style.display = 'block';
       content.style.display = 'none';
+
+      const url = 'https://mobilehost.loca.lt';  // URL to encode in the QR code
+      const qrCodeElement = document.getElementById('qrCodeImageRemote');
+
+      // Generate QR Code
+      QRCode.toDataURL(url, { width: 200, margin: 2 }, (err, url) => {
+        if (err) {
+          console.error('Error generating QR code:', err);
+          return;
+        }
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'QR Code for mobilehost.loca.lt';
+        qrCodeElement.appendChild(img);
+      })
 
       let token = '';
 
@@ -197,10 +239,10 @@
           const files = await response.json();
           fileList.innerHTML = files.length > 0
             ? files.map(file => `
-              <li>
-                <a href="#" data-file="${file}" class="download-link">${file}</a>
-              </li>
-            `).join('')
+                <li>
+                  <a href="#" data-file="${file}" class="download-link">${file}</a>
+                </li>
+              `).join('')
             : '<li>No files available.</li>';
           document.querySelectorAll('.download-link').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -296,4 +338,5 @@
     });
   </script>
 </body>
+
 </html>
