@@ -134,13 +134,36 @@
       font-size: 1.2rem;
       color: var(--primary-color);
     }
-    
+
     #serverLinkRemote {
       display: block;
       text-align: center;
       margin-top: 1rem;
       font-size: 1.2rem;
       color: var(--primary-color);
+    }
+
+    #spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 8px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 8px solid var(--primary-color);
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -175,7 +198,7 @@
         <img id="qrCodeImage" src="" alt="QR Code" />
       </div>
       <a id="serverLink" href="" target="_blank">Server URL</a>
-      
+
       <div class="qr-code">
         <p>Remote Access URL:</p>
         <img id="qrCodeImageRemote" src="" alt="QR Code" />
@@ -183,6 +206,8 @@
       <a id="serverLinkRemote" href="" target="_blank">mobilehost.loca.lt</a>
     </div>
   </div>
+
+  <div id="spinner" style="display: none;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
   <script>
@@ -289,13 +314,20 @@
 
       document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+
         const formData = new FormData(e.target);
+        const spinner = document.getElementById('spinner');
+
+        // Show spinner
+        spinner.style.display = 'block';
+
         try {
           const response = await fetch('/upload', {
             method: 'POST',
             body: formData,
             headers: { 'Authorization': `Bearer ${token}` },
           });
+
           if (response.ok) {
             alert('File successfully uploaded!');
             fetchFiles(); // Refresh the file list
@@ -304,8 +336,12 @@
           }
         } catch (error) {
           console.error('Error uploading file:', error);
+        } finally {
+          // Hide spinner
+          spinner.style.display = 'none';
         }
       });
+
 
       document.getElementById('deleteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -314,9 +350,9 @@
           alert('Please enter a file name to delete.');
           return;
         }
-        // if (!confirm(`Are you sure you want to delete the file "${filename}"?`)) {
-        //   return;
-        // }
+        if (!confirm(`Are you sure you want to delete the file "${filename}"?`)) {
+          return;
+        }
 
         try {
           const response = await fetch('/delete', {
