@@ -278,7 +278,7 @@
         e.preventDefault();
         const filename = document.getElementById('deleteFilename').value;
         try {
-          const response = await fetch('/delete/:filename', {
+          const response = await fetch('/delete/${filename}', {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
