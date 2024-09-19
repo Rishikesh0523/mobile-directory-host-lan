@@ -281,7 +281,10 @@
           document.querySelectorAll('.download-link').forEach(link => {
             link.addEventListener('click', (e) => {
               e.preventDefault();
+              const spinner = document.getElementById('spinner');
+              spinner.style.display = 'block';
               downloadFile(e.target.dataset.file);
+              spinner.style.display = 'none';
             });
           });
         } catch (error) {
@@ -311,9 +314,6 @@
       };
 
       const downloadFile = (filename) => {
-        const spinner = document.getElementById('spinner');
-        
-        spinner.style.display = 'block';
         fetch(`/download/${filename}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         })
@@ -342,7 +342,6 @@
             console.error('Error downloading file:', error);
             alert(`Failed to download file: ${error.message}`);
           });
-          spinner.style.display = 'none';
       };
 
 
