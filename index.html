@@ -311,6 +311,8 @@
       };
 
       const downloadFile = (filename) => {
+        const spinner = document.getElementById('spinner');
+        
         spinner.style.display = 'block';
         fetch(`/download/${filename}`, {
           headers: { 'Authorization': `Bearer ${token}` },
