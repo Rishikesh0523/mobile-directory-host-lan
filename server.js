@@ -148,7 +148,10 @@ app.post('/upload', authenticate, (req, res) => {
 
 app.delete('/delete', authenticate, (req, res) => {
   try {
+    console.log('Delete request received:', req.body);
     const file = path.join(downloadsDir, req.params.filename);
+    console.log('File path:', file);
+
     fs.unlink(file, (err) => {
       if (err) {
         console.error('Delete error:', err);
