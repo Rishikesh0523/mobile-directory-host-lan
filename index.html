@@ -317,6 +317,10 @@
           .then(response => {
             if (response.ok) {
               return response.blob();
+            } else if (response.status === 404) {
+              throw new Error('File not found.');
+            } else if (response.status === 403) {
+              throw new Error('Unauthorized to access this file.');
             } else {
               throw new Error('Failed to download file.');
             }
@@ -329,12 +333,14 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            window.URL.revokeObjectURL(url); // Clean up
           })
           .catch(error => {
             console.error('Error downloading file:', error);
-            alert('Failed to download file.');
+            alert(`Failed to download file: ${error.message}`);
           });
       };
+
 
       document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
