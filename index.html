@@ -310,8 +310,16 @@
       document.getElementById('deleteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const filename = document.getElementById('deleteFilename').value;
+        if (!filename) {
+          alert('Please enter a file name to delete.');
+          return;
+        }
+        // if (!confirm(`Are you sure you want to delete the file "${filename}"?`)) {
+        //   return;
+        // }
+
         try {
-          const response = await fetch('/delete/${filename}', {
+          const response = await fetch('/delete', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ filename }),
