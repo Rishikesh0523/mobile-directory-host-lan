@@ -146,7 +146,7 @@ app.post('/upload', authenticate, (req, res) => {
   }
 });
 
-app.delete('/delete/:filename', authenticate, (req, res) => {
+app.delete('/delete', authenticate, (req, res) => {
   try {
     const file = path.join(downloadsDir, req.params.filename);
     fs.unlink(file, (err) => {
