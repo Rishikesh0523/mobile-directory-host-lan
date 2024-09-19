@@ -181,7 +181,6 @@
         <img id="qrCodeImageRemote" src="" alt="QR Code" />
       </div>
       <a id="serverLinkRemote" href="" target="_blank">mobilehost.loca.lt</a>
-
     </div>
   </div>
 
@@ -298,6 +297,7 @@
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (response.ok) {
+            alert('File successfully uploaded!');
             fetchFiles(); // Refresh the file list
           } else {
             alert('Failed to upload file.');
@@ -317,6 +317,7 @@
             body: JSON.stringify({ filename }),
           });
           if (response.ok) {
+            alert('File successfully deleted!');
             fetchFiles(); // Refresh the file list
           } else {
             alert('Failed to delete file.');
